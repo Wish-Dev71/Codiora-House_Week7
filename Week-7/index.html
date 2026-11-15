@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CODIORA | Advanced Search & Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#f4f6fb;color:#222}
+header{background:#0f172a;color:#fff;padding:15px 5%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+header h1{font-size:22px} header h1 span{color:#22d3ee}
+nav button{background:#fff;border:none;padding:8px 14px;margin:3px;border-radius:20px;cursor:pointer;font-weight:bold}
+nav button.active{background:#22d3ee}
+.container{max-width:1200px;margin:auto;padding:20px}
+.section{display:none}.section.active{display:block}
+.hero{background:#fff;padding:20px;border-radius:12px;text-align:center;margin-bottom:16px}
+.hero h2{font-size:26px}.hero p{color:#666;margin:6px 0}
+.search-big{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.search-big input{flex:2;min-width:220px;padding:12px;border:1px solid #ccc;border-radius:20px}
+.search-big select{padding:12px;border:1px solid #ccc;border-radius:20px}
+.search-big button{padding:12px 20px;background:#22d3ee;border:none;border-radius:20px;font-weight:bold;cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+.stat{background:#fff;padding:15px;border-radius:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.stat b{font-size:22px;display:block}
+.layout{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start}
+.filter{background:#fff;padding:16px;border-radius:12px;position:sticky;top:10px}
+.filter h3{margin-bottom:10px}.filter label{font-size:13px;font-weight:bold;display:block;margin:12px 0 5px}
+.filter select,.filter input{width:100%;padding:9px;border:1px solid #ccc;border-radius:8px}
+.filter button{width:100%;padding:10px;margin-top:12px;border:none;border-radius:8px;background:#0f172a;color:#fff;font-weight:bold;cursor:pointer}
+.filter .clear{background:#f1f5f9;color:#222}
+.toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:#fff;padding:12px;border-radius:12px;margin-bottom:14px}
+.toolbar select{padding:8px;border:1px solid #ccc;border-radius:8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{background:#fff;padding:7px 12px;border-radius:20px;cursor:pointer;border:1px solid #ddd;font-size:13px}
+.chip.active{background:#0f172a;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{background:#fff;padding:16px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.07);position:relative}
+.card .fav{position:absolute;top:12px;right:12px;font-size:22px;cursor:pointer;background:none;border:none}
+.tag{background:#e0f2fe;color:#0369a1;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:bold}
+.card h3{margin:10px 0 5px;padding-right:28px}
+.card p{font-size:13px;color:#555;margin:3px 0}
+.skills span{background:#f1f5f9;padding:4px 8px;border-radius:6px;font-size:12px;display:inline-block;margin:3px 3px 0 0}
+.card button{margin-top:10px;width:100%;padding:10px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;background:#0f172a;color:#fff}
+.card button.outline{background:#fff;border:1px solid #0f172a;color:#0f172a}
+.empty{text-align:center;background:#fff;padding:30px;border-radius:12px;display:none}
+.empty b{font-size:18px}
+.loading{text-align:center;padding:20px;display:none;color:#666}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dash-card{background:#fff;padding:18px;border-radius:12px}
+.dash-card h3{margin-bottom:10px}.dash-card li{list-style:none;padding:8px 0;border-bottom:1px solid #eee;font-size:14px;display:flex;justify-content:space-between}
+.view-toggle{display:flex;gap:8px;background:#f1f5f9;padding:5px;border-radius:20px;width:fit-content;margin:0 auto 16px}
+.view-toggle button{border:none;padding:9px 16px;border-radius:20px;cursor:pointer;font-weight:bold;background:transparent}
+.view-toggle button.active{background:#0f172a;color:#fff}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.filter{position:static}.dash-grid{grid-template-columns:1fr}header{justify-content:center;text-align:center}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CODIORA <span>| Our Code Builds Your Vision</span></h1>
+  <nav>
+    <button class="active" onclick="show('marketplace',this)">🔍 Marketplace</button>
+    <button onclick="show('favorites',this)">❤️ My Favorites (<span id="favCount">0</span>)</button>
+    <button onclick="show('dashboard',this)">📊 Dashboard</button>
+  </nav>
+</header>
+
+<div class="container">
+
+<!-- MARKETPLACE -->
+<div id="marketplace" class="section active">
+  <div class="hero">
+    <h2>Find Services, Freelancers & Jobs 🚀</h2>
+    <p>Advanced Search - Try: <b>Web Development</b> • <b>Ali</b> • <b>Logo</b> • <b>Design</b></p>
+    <div class="search-big">
+      <input id="searchInput" placeholder="Search: Services, Freelancers, Jobs, Categories..." onkeyup="applyFilters()">
+      <select id="searchType" onchange="applyFilters()"><option value="All">All Types</option><option value="Service">Services</option><option value="Freelancer">Freelancers</option><option value="Job">Jobs</option></select>
+      <button onclick="applyFilters()">Search 🔍</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="s1">0</b>Total Services</div>
+    <div class="stat"><b id="s2">0</b>Freelancers</div>
+    <div class="stat"><b id="s3">0</b>Active Jobs</div>
+    <div class="stat"><b id="s4">$0</b>Avg. Price</div>
+    <div class="stat"><b>4.8 ⭐</b>Marketplace Rating</div>
+  </div>
+
+  <div class="layout">
+    <!-- FILTERS -->
+    <div class="filter">
+      <h3>🎛️ Filters</h3>
+      <label>Category</label>
+      <select id="fCategory" onchange="applyFilters()"><option value="All">All Categories</option><option>Web Development</option><option>Design</option><option>App Development</option><option>Marketing</option></select>
+      <label>Price Range</label>
+      <select id="fPrice" onchange="applyFilters()"><option value="All">All Prices</option><option value="0-150">Under $150</option><option value="150-400">$150 - $400</option><option value="400-1000">$400 - $1000</option><option value="1000-9999">Above $1000</option></select>
+      <label>Rating</label>
+      <select id="fRating" onchange="applyFilters()"><option value="0">Any Rating</option><option value="4.5">4.5+ ⭐</option><option value="4.0">4.0+ ⭐</option><option value="3.5">3.5+ ⭐</option></select>
+      <label>Delivery Time</label>
+      <select id="fDelivery" onchange="applyFilters()"><option value="All">Any Time</option><option value="3">Within 3 days</option><option value="7">Within 7 days</option><option value="14">Within 14 days</option></select>
+      <label>Experience Level</label>
+      <select id="fLevel" onchange="applyFilters()"><option value="All">All Levels</option><option>Beginner</option><option>Intermediate</option><option>Expert</option></select>
+      <button onclick="resetFilters()">Reset Filters</button>
+      <button class="clear" onclick="clearSearch()">Clear Search</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="chips">
+        <div class="chip active" onclick="quickCat('All',this)">All</div>
+        <div class="chip" onclick="quickCat('Web Development',this)">Web Development</div>
+        <div class="chip" onclick="quickCat('Design',this)">Design</div>
+        <div class="chip" onclick="quickCat('App Development',this)">App Development</div>
+        <div class="chip" onclick="quickCat('Marketing',this)">Marketing</div>
+      </div>
+      <div class="toolbar">
+        <b id="resultText">Showing 0 results</b>
+        <label>Sort by: <select id="sortBy" onchange="applyFilters()"><option value="popular">Most Popular</option><option value="low">Price: Low to High</option><option value="high">Price: High to Low</option><option value="rating">Highest Rating</option><option value="newest">Newest</option></select></label>
+      </div>
+      <div class="loading" id="loading">⏳ Loading results...</div>
+      <div class="grid" id="resultGrid"></div>
+      <div class="empty" id="emptyBox"><b>😔 No services found</b><p style="color:#666;margin:8px 0">Try different search or clear filters.</p><button onclick="resetFilters()" style="padding:10px 16px;background:#0f172a;color:#fff;border:none;border-radius:8px;cursor:pointer">Clear All Filters</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- FAVORITES -->
+<div id="favorites" class="section">
+  <h2>❤️ My Favorites / Saved Services</h2>
+  <p style="color:#666;margin:8px 0">Saved items can be viewed later.</p>
+  <div class="grid" id="favGrid" style="margin-top:14px"></div>
+  <div id="favEmpty" class="empty" style="display:block"><b>No favorites saved yet</b><p style="color:#666;margin:8px 0">Tap ❤️ on any service to save it here.</p></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="section">
+  <div class="view-toggle">
+    <button id="btnF" class="active" onclick="setDash('Freelancer')">💻 Freelancer Dashboard</button>
+    <button id="btnC" onclick="setDash('Client')">👤 Client Dashboard</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="d1">$1,670</b><span id="d1l">Total Earnings</span></div>
+    <div class="stat"><b id="d2">4</b><span id="d2l">Active Projects</span></div>
+    <div class="stat"><b id="d3">12</b><span id="d3l">Orders / Proposals</span></div>
+    <div class="stat"><b>4.8 ⭐</b>Your Rating</div>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-card"><h3 id="dashTitle1">💼 My Services</h3><ul id="dashList1"></ul></div>
+    <div class="dash-card"><h3>📩 Messages & Reviews</h3><ul><li>💬 Ayesha Khan: Homepage ready... <b>2 unread</b></li><li>⭐ New Review: 5 stars from Bilal</li><li>💬 Fatima: Project completed</li><li>📩 No messages yet (if empty)</li></ul></div>
+    <div class="dash-card"><h3>📦 Orders / Active Projects</h3><ul><li>Portfolio Website - In Progress <b>$300</b></li><li>Landing Page - Completed <b>$250</b></li><li>E-commerce App - Pending <b>$800</b></li><li><i>No active projects (empty state demo)</i></li></ul></div>
+    <div class="dash-card"><h3>⭐ Recent Activity</h3><ul><li>Proposal Accepted ✅</li><li>Project Completed 🎉</li><li>New Review Received ⭐</li><li>Payment Received 💰</li></ul></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+let items=[
+{id:1,type:"Service",title:"Portfolio Website Development",name:"Ali Raza",category:"Web Development",price:300,rating:4.9,reviews:48,delivery:5,level:"Expert",skills:["HTML","CSS","JS"],pop:95,date:"2026-11-14"},
+{id:2,type:"Service",title:"Modern Logo Design",name:"Sana Malik",category:"Design",price:120,rating:4.8,reviews:62,delivery:3,level:"Intermediate",skills:["Figma","Illustrator"],pop:88,date:"2026-11-13"},
+{id:3,type:"Service",title:"E-commerce App UI/UX",name:"Hamza Ali",category:"App Development",price:800,rating:4.7,reviews:31,delivery:10,level:"Expert",skills:["Flutter","UI/UX"],pop:76,date:"2026-11-12"},
+{id:4,type:"Service",title:"Landing Page Design",name:"Fatima Noor",category:"Web Development",price:250,rating:4.9,reviews:54,delivery:4,level:"Intermediate",skills:["HTML","CSS"],pop:92,date:"2026-11-11"},
+{id:5,type:"Freelancer",title:"Full Stack Developer - Available",name:"Usman Khan",category:"Web Development",price:500,rating:5.0,reviews:70,delivery:7,level:"Expert",skills:["React","Node"],pop:99,date:"2026-11-15"},
+{id:6,type:"Freelancer",title:"Graphic Designer & Branding Expert",name:"Ayesha Khan",category:"Design",price:150,rating:4.6,reviews:40,delivery:3,level:"Beginner",skills:["Photoshop","Branding"],pop:65,date:"2026-11-10"},
+{id:7,type:"Job",title:"Need SEO for Website",name:"Bilal Ahmed (Client)",category:"Marketing",price:200,rating:4.5,reviews:12,delivery:14,level:"Intermediate",skills:["SEO","Content"],pop:58,date:"2026-11-09"},
+{id:8,type:"Service",title:"Social Media Marketing Package",name:"Hira Shah",category:"Marketing",price:350,rating:4.4,reviews:28,delivery:7,level:"Intermediate",skills:["Meta Ads","SEO"],pop:71,date:"2026-11-08"},
+{id:9,type:"Service",title:"Mobile App Development - Flutter",name:"Danish Ali",category:"App Development",price:1200,rating:4.9,reviews:22,delivery:14,level:"Expert",skills:["Flutter","Firebase"],pop:82,date:"2026-11-07"},
+];
+let favorites=new Set();
+let currentDash='Freelancer';
+
+function cardHTML(it){
+  const fav=favorites.has(it.id)?'❤️':'🤍';
+  return `<div class="card">
+  <button class="fav" onclick="toggleFav(${it.id})">${fav}</button>
+  <span class="tag">${it.category} • ${it.type}</span>
+  <h3>${it.title}</h3>
+  <p><b>${it.name}</b> • ${it.level}</p>
+  <p>⭐ ${it.rating} (${it.reviews} reviews) • 🚚 ${it.delivery} days delivery</p>
+  <p><b style="font-size:18px;color:#0f172a">$${it.price}</b></p>
+  <div class="skills">${it.skills.map(s=>`<span>${s}</span>`).join('')}</div>
+  <button onclick="alert('Opening: ${it.title}')">View Details</button>
+  <button class="outline" onclick="toggleFav(${it.id})">${favorites.has(it.id)?'Remove from Favorites':'Save to Favorites'}</button>
+  </div>`;
+}
+function applyFilters(){
+  document.getElementById('loading').style.display='block';
+  document.getElementById('resultGrid').innerHTML='';
+  setTimeout(()=>{
+    document.getElementById('loading').style.display='none';
+    const q=document.getElementById('searchInput').value.toLowerCase();
+    const type=document.getElementById('searchType').value;
+    const cat=document.getElementById('fCategory').value;
+    const price=document.getElementById('fPrice').value;
+    const minR=parseFloat(document.getElementById('fRating').value);
+    const del=document.getElementById('fDelivery').value;
+    const lvl=document.getElementById('fLevel').value;
+    const sort=document.getElementById('sortBy').value;
+    let list=items.filter(it=>{
+      if(type!=='All'&&it.type!==type) return false;
+      if(cat!=='All'&&it.category!==cat) return false;
+      if(q&&!(it.title.toLowerCase().includes(q)||it.name.toLowerCase().includes(q)||it.category.toLowerCase().includes(q)||it.skills.join(' ').toLowerCase().includes(q))) return false;
+      if(price!=='All'){ const [a,b]=price.split('-').map(Number); if(it.price<a||it.price>b) return false; }
+      if(it.rating<minR) return false;
+      if(del!=='All'&&it.delivery>parseInt(del)) return false;
+      if(lvl!=='All'&&it.level!==lvl) return false;
+      return true;
+    });
+    if(sort==='low') list.sort((a,b)=>a.price-b.price);
+    if(sort==='high') list.sort((a,b)=>b.price-a.price);
+    if(sort==='rating') list.sort((a,b)=>b.rating-a.rating);
+    if(sort==='popular') list.sort((a,b)=>b.pop-a.pop);
+    if(sort==='newest') list.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    document.getElementById('resultGrid').innerHTML=list.map(cardHTML).join('');
+    document.getElementById('resultText').innerText=`Showing ${list.length} results ${q?`for "${q}"`:''}`;
+    document.getElementById('emptyBox').style.display=list.length?'none':'block';
+    // stats
+    document.getElementById('s1').innerText=items.filter(i=>i.type==='Service').length;
+    document.getElementById('s2').innerText=items.filter(i=>i.type==='Freelancer').length;
+    document.getElementById('s3').innerText=items.filter(i=>i.type==='Job').length;
+    document.getElementById('s4').innerText='$'+Math.round(items.reduce((s,i)=>s+i.price,0)/items.length);
+  },400);
+}
+function toggleFav(id){
+  if(favorites.has(id)) favorites.delete(id); else favorites.add(id);
+  document.getElementById('favCount').innerText=favorites.size;
+  renderFav(); applyFilters();
+}
+function renderFav(){
+  const list=items.filter(i=>favorites.has(i.id));
+  document.getElementById('favGrid').innerHTML=list.map(cardHTML).join('');
+  document.getElementById('favEmpty').style.display=list.length?'none':'block';
+}
+function quickCat(cat,el){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); el.classList.add('active');
+  document.getElementById('fCategory').value=cat; applyFilters();
+}
+function resetFilters(){
+  document.getElementById('searchInput').value=''; document.getElementById('fCategory').value='All'; document.getElementById('fPrice').value='All'; document.getElementById('fRating').value='0'; document.getElementById('fDelivery').value='All'; document.getElementById('fLevel').value='All'; document.getElementById('searchType').value='All'; applyFilters();
+}
+function clearSearch(){ document.getElementById('searchInput').value=''; applyFilters(); }
+function setDash(v){
+  currentDash=v; document.getElementById('btnF').classList.toggle('active',v==='Freelancer'); document.getElementById('btnC').classList.toggle('active',v==='Client');
+  if(v==='Freelancer'){
+    document.getElementById('d1').innerText='$1,670'; document.getElementById('d1l').innerText='Total Earnings';
+    document.getElementById('d2').innerText='4'; document.getElementById('d2l').innerText='Active Projects';
+    document.getElementById('d3').innerText='12'; document.getElementById('d3l').innerText='Orders / Proposals';
+    document.getElementById('dashTitle1').innerText='💼 My Services';
+    document.getElementById('dashList1').innerHTML='<li>Portfolio Website <b>$300</b></li><li>Landing Page <b>$250</b></li><li>Logo Design <b>$120</b></li><li>E-commerce UI <b>$800</b></li>';
+  } else {
+    document.getElementById('d1').innerText='5'; document.getElementById('d1l').innerText='Posted Jobs';
+    document.getElementById('d2').innerText='8'; document.getElementById('d2l').innerText='Proposals Received';
+    document.getElementById('d3').innerText='3'; document.getElementById('d3l').innerText='Active Orders';
+    document.getElementById('dashTitle1').innerText='📝 Posted Jobs';
+    document.getElementById('dashList1').innerHTML='<li>Portfolio Website <b>4 proposals</b></li><li>Logo Design <b>8 proposals</b></li><li>E-commerce App <b>2 proposals</b></li><li>No active projects (empty)</li>';
+  }
+}
+function show(id,btn){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active')); if(btn)btn.classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active');
+}
+applyFilters(); setDash('Freelancer');
+</script>
+</body>
+</html>
